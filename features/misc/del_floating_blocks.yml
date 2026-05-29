@@ -7,8 +7,8 @@ distributor:
 locator:
   type: PATTERN
   range:
-    min: ${meta.yml:bottom-y} + 6
-    max: $meta.yml:top-y
+    min: ${meta.yml:ocean-level} + 3
+    max: ${meta.yml:ocean-level} + 128
   pattern:
     type: AND
     patterns:
