@@ -18,15 +18,17 @@ variables:
   carvingThreshold: 0.55 # Higher = less carving
   carvingCap: 1 # Caps the amount of base carving
 
-  cheeseStrength: 0.46 # Higher = larger cheese caves
+  cheeseStrength: 0.62 # Higher = larger cheese caves
+  cheeseBias: 0.32
   cheeseHorizontalFrequency: 1.1
   cheeseVerticalFrequency: 0.75
-  cheeseLayerStrength: 0.16 # Higher = stronger stacked/layered cave shelves
+  cheeseLayerStrength: 0.3 # Higher = stronger stacked/layered cave shelves
+  cheeseLayerGateBias: 0.12
   cheeseLayerHorizontalFrequency: 0.9
-  cheeseLayerVerticalFrequency: 4.5
-  cheeseLayerSharpness: 8
-  cheeseRoughnessStrength: 0.11
-  cheeseDeepBoost: 0.04
+  cheeseLayerVerticalFrequency: 5.5
+  cheeseLayerSharpness: 6
+  cheeseRoughnessStrength: 0.08
+  cheeseDeepBoost: 0.06
 
   # Higher = larger spaghetti caves
   spaghettiAStrength: 0.58
@@ -40,7 +42,7 @@ variables:
   pillarRadius: 0.02
   pillarRarenessThreshold: -0.15
 
-  megaCaveStrength: 0.03
+  megaCaveStrength: 0.05
   megaCaveSize: 0.3
 
   # Clamping variables
@@ -48,8 +50,8 @@ variables:
   carvingMinHeight: ${meta.yml:bottom-y} + 1 # Where all carving will cut off at the bottom of the world
   carvingMinTaper: 4 # How many blocks above the min height should all carving 'fade out'
 
-  cheeseSurfaceBreak: -38 # How many blocks from the surface cheese carving will stop
-  cheeseSurfaceBreakTaper: 24 # How many blocks from surface break should cheese carving taper out
+  cheeseSurfaceBreak: -26 # How many blocks from the surface cheese carving will stop
+  cheeseSurfaceBreakTaper: 22 # How many blocks from surface break should cheese carving taper out
 
   noodleSurfaceBreak: -15 # How many blocks from the surface cheese carving will stop
   noodleSurfaceBreakTaper: 15 # How many blocks from surface break should cheese carving taper out
@@ -111,21 +113,33 @@ expression: | # If > 0 then carve
                 x * cheeseHorizontalFrequency,
                 (y + simplex2(x, z) * 5) * cheeseVerticalFrequency,
                 z * cheeseHorizontalFrequency
-              ))
+              ) + cheeseBias)
 
-              // Vanilla-like cave_layer approximation: opens stacked horizontal bands where the layer field is near zero.
-              + cheeseLayerStrength * (1 - min(1, |caveLayer(
-                x * cheeseLayerHorizontalFrequency,
-                (y + simplex2(x + 4000, z - 4000) * 3) * cheeseLayerVerticalFrequency,
-                z * cheeseLayerHorizontalFrequency
-              )| * cheeseLayerSharpness))
+              // Vanilla-like cave_layer approximation: opens stacked horizontal bands only inside broad cheese systems.
+              + cheeseLayerStrength
+                * max(0, caveCheese(
+                  x * cheeseHorizontalFrequency,
+                  (y + simplex2(x, z) * 5) * cheeseVerticalFrequency,
+                  z * cheeseHorizontalFrequency
+                ) + cheeseLayerGateBias)
+                * (1 - min(1, |caveLayer(
+                  x * cheeseLayerHorizontalFrequency,
+                  (y + simplex2(x + 4000, z - 4000) * 3) * cheeseLayerVerticalFrequency,
+                  z * cheeseLayerHorizontalFrequency
+                )| * cheeseLayerSharpness))
 
-              // Small roughness term to break up smooth round walls.
-              + cheeseRoughnessStrength * (1 - min(1, |caveRoughness(
-                x * 2,
-                y * 2,
-                z * 2
-              )| * 2))
+              // Small gated roughness term to break up smooth round walls without carving isolated noise pockets.
+              + cheeseRoughnessStrength
+                * max(0, caveCheese(
+                  x * cheeseHorizontalFrequency,
+                  (y + simplex2(x, z) * 5) * cheeseVerticalFrequency,
+                  z * cheeseHorizontalFrequency
+                ) + cheeseLayerGateBias)
+                * (1 - min(1, |caveRoughness(
+                  x * 2,
+                  y * 2,
+                  z * 2
+                )| * 2))
 
               // Slightly favor large cave systems in the deepslate band.
               + lerp(y, -48, cheeseDeepBoost, 24, 0)
