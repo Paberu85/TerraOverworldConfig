@@ -18,9 +18,15 @@ variables:
   carvingThreshold: 0.55 # Higher = less carving
   carvingCap: 1 # Caps the amount of base carving
 
-  cheeseStrength: 0.7 # Higher = larger cheese caves
-  cheeseHorizontalFrequency: 1.5
-  cheeseVerticalFrequency: 3
+  cheeseStrength: 0.46 # Higher = larger cheese caves
+  cheeseHorizontalFrequency: 1.1
+  cheeseVerticalFrequency: 0.75
+  cheeseLayerStrength: 0.38 # Higher = stronger stacked/layered cave shelves
+  cheeseLayerHorizontalFrequency: 0.9
+  cheeseLayerVerticalFrequency: 8
+  cheeseLayerSharpness: 3
+  cheeseRoughnessStrength: 0.11
+  cheeseDeepBoost: 0.1
 
   # Higher = larger spaghetti caves
   spaghettiAStrength: 0.58
@@ -32,8 +38,9 @@ variables:
 
   pillarStrength: 0.5
   pillarRadius: 0.02
+  pillarRarenessThreshold: -0.15
 
-  megaCaveStrength: 0.3
+  megaCaveStrength: 0.08
   megaCaveSize: 0.3
 
   # Clamping variables
@@ -98,17 +105,39 @@ expression: | # If > 0 then carve
           ),
           // Cheese caves
           maskSmooth(
-            cheeseStrength * (simplex3(
-              x * cheeseHorizontalFrequency,
-              (y + simplex2(x, z) * 5) * cheeseVerticalFrequency,
-              z * cheeseHorizontalFrequency
-            )+1)/2
-  
-            // Mega caves
-            +lerp(megaCaves(x, y, z), 1-megaCaveSize, 0, 1, megaCaveStrength)
-  
-            // Pillars
-            -lerp(cavePillars(x, z),-1+pillarRadius,0,-1,1) * pillarStrength,
+            max(0,
+              // Broad cave field, deliberately less vertically frequent than the old sampler.
+              cheeseStrength * (caveCheese(
+                x * cheeseHorizontalFrequency,
+                (y + simplex2(x, z) * 5) * cheeseVerticalFrequency,
+                z * cheeseHorizontalFrequency
+              )+1)/2
+
+              // Vanilla-like cave_layer approximation: opens stacked horizontal bands where the layer field is near zero.
+              + cheeseLayerStrength * (1 - min(1, |caveLayer(
+                x * cheeseLayerHorizontalFrequency,
+                (y + simplex2(x + 4000, z - 4000) * 3) * cheeseLayerVerticalFrequency,
+                z * cheeseLayerHorizontalFrequency
+              )| * cheeseLayerSharpness))
+
+              // Small roughness term to break up smooth round walls.
+              + cheeseRoughnessStrength * (1 - min(1, |caveRoughness(
+                x * 2,
+                y * 2,
+                z * 2
+              )| * 2))
+
+              // Slightly favor large cave systems in the deepslate band.
+              + lerp(y, -48, cheeseDeepBoost, 24, 0)
+
+              // Keep a reduced legacy mega-cave term only as rare reinforcement, not as the main shape.
+              + lerp(megaCaves(x, y, z), 1-megaCaveSize, 0, 1, megaCaveStrength)
+
+              // Pillars suppress carving in rare regions so large rooms get bridges/columns instead of uniform blobs.
+              - lerp(cavePillarRareness(x, z), pillarRarenessThreshold, 0, 1, 1)
+                * lerp(cavePillars(x, z), -1 + pillarRadius, 0, -1, 1)
+                * pillarStrength
+            ),
   
             // Cheese mask
             if(carvingMaxMode=1,elevation(x, z)*terrainScale+terrainBase,if(carvingMaxMode=2,oceanElevation(x, z)*oceanDepth+oceanBase,carvingMaxHeight)) + cheeseSurfaceBreakTaper,
@@ -145,10 +174,57 @@ samplers:
       type: OPEN_SIMPLEX_2
       frequency: 0.0075
 
+  caveCheese:
+    dimensions: 3
+    type: DOMAIN_WARP
+    amplitude: 5
+    warp:
+      type: OPEN_SIMPLEX_2
+      salt: 6021
+      frequency: 0.018
+    sampler:
+      type: FBM
+      octaves: 5
+      gain: 0.55
+      lacunarity: 2
+      sampler:
+        type: OPEN_SIMPLEX_2
+        salt: 6022
+        frequency: 0.0065
+
+  caveLayer:
+    dimensions: 3
+    type: FBM
+    octaves: 2
+    gain: 0.45
+    lacunarity: 2
+    sampler:
+      type: OPEN_SIMPLEX_2
+      salt: 6023
+      frequency: 0.0065
+
+  caveRoughness:
+    dimensions: 3
+    type: FBM
+    octaves: 3
+    gain: 0.5
+    lacunarity: 2.2
+    sampler:
+      type: OPEN_SIMPLEX_2
+      salt: 6024
+      frequency: 0.018
+
   cavePillars:
     dimensions: 2
     type: CELLULAR
+    return: CellValue
     frequency: 0.05
+
+  cavePillarRareness:
+    dimensions: 2
+    type: OPEN_SIMPLEX_2
+    salt: 6025
+    frequency: 0.02
 
   megaCaves:
     dimensions: 3
