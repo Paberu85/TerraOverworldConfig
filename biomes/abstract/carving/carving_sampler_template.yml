@@ -18,17 +18,17 @@ variables:
   carvingThreshold: 0.55 # Higher = less carving
   carvingCap: 1 # Caps the amount of base carving
 
-  cheeseStrength: 0.62 # Higher = larger cheese caves
-  cheeseBias: 0.32
+  cheeseStrength: 0.68 # Higher = larger cheese caves
+  cheeseBias: 0.42
   cheeseHorizontalFrequency: 1.1
   cheeseVerticalFrequency: 0.75
   cheeseLayerStrength: 0.3 # Higher = stronger stacked/layered cave shelves
-  cheeseLayerGateBias: 0.12
+  cheeseLayerGateBias: 0.18
   cheeseLayerHorizontalFrequency: 0.9
   cheeseLayerVerticalFrequency: 5.5
   cheeseLayerSharpness: 6
   cheeseRoughnessStrength: 0.08
-  cheeseDeepBoost: 0.06
+  cheeseDeepBoost: 0.08
 
   # Higher = larger spaghetti caves
   spaghettiAStrength: 0.58
@@ -42,7 +42,7 @@ variables:
   pillarRadius: 0.02
   pillarRarenessThreshold: -0.15
 
-  megaCaveStrength: 0.05
+  megaCaveStrength: 0.08
   megaCaveSize: 0.3
 
   # Clamping variables
