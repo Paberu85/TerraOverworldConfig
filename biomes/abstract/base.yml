@@ -26,6 +26,7 @@ features:
     - UNDERGROUND_LAVA_STREAMS
     - CAVE_ENTRANCES
     - CAVE_CARVERS
+    - DEL_FLOATING_BLOCKS
     - SPARSE_PROCEDURAL_COBWEBS
   underwater-flora:
     - KELP

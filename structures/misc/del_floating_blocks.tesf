@@ -1,8 +1,29 @@
-if (
-check(1, 0, 1) == "AIR" &&
-    check(-1, 0, 1) == "AIR" &&
-    check(1, 0, -1) == "AIR" &&
-    check(-1, 0, -1) == "AIR"
-) {
-    block(0, 0, 0, "minecraft:air");
+if (!structure(0, 0, 0, "is_floating_cleanup_block", "NONE")) fail;
+if (check(0, -1, 0) != "AIR") fail;
+
+num support = 0;
+
+// Solid terrain close above or far to the side usually means this is a cave ceiling,
+// cliff, or overhang rather than a detached clump.
+if (check(0, 4, 0) == "LAND") support = support + 4;
+if (check(4, 0, 0) == "LAND") support = support + 2;
+if (check(-4, 0, 0) == "LAND") support = support + 2;
+if (check(0, 0, 4) == "LAND") support = support + 2;
+if (check(0, 0, -4) == "LAND") support = support + 2;
+if (check(3, 2, 0) == "LAND") support = support + 1;
+if (check(-3, 2, 0) == "LAND") support = support + 1;
+if (check(0, 2, 3) == "LAND") support = support + 1;
+if (check(0, 2, -3) == "LAND") support = support + 1;
+
+if (support > 2) fail;
+
+for (num x = -3; x <= 3; x = x + 1) {
+    for (num y = 0; y <= 4; y = y + 1) {
+        for (num z = -3; z <= 3; z = z + 1) {
+            if (pow(x, 2) + pow(y * 0.75, 2) + pow(z, 2) <= 10 &&
+                structure(x, y, z, "is_floating_cleanup_block", "NONE")) {
+                block(x, y, z, "minecraft:air");
+            }
+        }
+    }
 }

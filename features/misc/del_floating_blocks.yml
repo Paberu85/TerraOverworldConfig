@@ -7,13 +7,11 @@ distributor:
 locator:
   type: PATTERN
   range:
-    min: ${meta.yml:ocean-level} + 3
-    max: ${meta.yml:ocean-level} + 89
+    min: ${meta.yml:bottom-y} + 6
+    max: $meta.yml:top-y
   pattern:
     type: AND
     patterns:
-      - type: MATCH_AIR
-        offset: 1
       - type: MATCH_SOLID
         offset: 0
       - type: MATCH_AIR
