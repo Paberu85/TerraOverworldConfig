@@ -21,12 +21,12 @@ variables:
   cheeseStrength: 0.46 # Higher = larger cheese caves
   cheeseHorizontalFrequency: 1.1
   cheeseVerticalFrequency: 0.75
-  cheeseLayerStrength: 0.38 # Higher = stronger stacked/layered cave shelves
+  cheeseLayerStrength: 0.16 # Higher = stronger stacked/layered cave shelves
   cheeseLayerHorizontalFrequency: 0.9
-  cheeseLayerVerticalFrequency: 8
-  cheeseLayerSharpness: 3
+  cheeseLayerVerticalFrequency: 4.5
+  cheeseLayerSharpness: 8
   cheeseRoughnessStrength: 0.11
-  cheeseDeepBoost: 0.1
+  cheeseDeepBoost: 0.04
 
   # Higher = larger spaghetti caves
   spaghettiAStrength: 0.58
@@ -40,7 +40,7 @@ variables:
   pillarRadius: 0.02
   pillarRarenessThreshold: -0.15
 
-  megaCaveStrength: 0.08
+  megaCaveStrength: 0.03
   megaCaveSize: 0.3
 
   # Clamping variables
@@ -48,8 +48,8 @@ variables:
   carvingMinHeight: ${meta.yml:bottom-y} + 1 # Where all carving will cut off at the bottom of the world
   carvingMinTaper: 4 # How many blocks above the min height should all carving 'fade out'
 
-  cheeseSurfaceBreak: -20 # How many blocks from the surface cheese carving will stop
-  cheeseSurfaceBreakTaper: 20 # How many blocks from surface break should cheese carving taper out
+  cheeseSurfaceBreak: -38 # How many blocks from the surface cheese carving will stop
+  cheeseSurfaceBreakTaper: 24 # How many blocks from surface break should cheese carving taper out
 
   noodleSurfaceBreak: -15 # How many blocks from the surface cheese carving will stop
   noodleSurfaceBreakTaper: 15 # How many blocks from surface break should cheese carving taper out
@@ -107,11 +107,11 @@ expression: | # If > 0 then carve
           maskSmooth(
             max(0,
               // Broad cave field, deliberately less vertically frequent than the old sampler.
-              cheeseStrength * (caveCheese(
+              cheeseStrength * max(0, caveCheese(
                 x * cheeseHorizontalFrequency,
                 (y + simplex2(x, z) * 5) * cheeseVerticalFrequency,
                 z * cheeseHorizontalFrequency
-              )+1)/2
+              ))
 
               // Vanilla-like cave_layer approximation: opens stacked horizontal bands where the layer field is near zero.
               + cheeseLayerStrength * (1 - min(1, |caveLayer(
